@@ -6,19 +6,14 @@ from ibm_botocore.client import Config
 from ibm_botocore.exceptions import ClientError
 import ibm_s3transfer.manager
 import pandas as pd
-# import sys
 import tweepy
 import matplotlib.pyplot as plt
 import numpy as np
 import nltk
-# import pycountry
 import re
 import string
 from wordcloud import WordCloud, STOPWORDS
-# from PIL import Image
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-# from langdetect import detect
-# from nltk.stem import SnowballStemmer
 from sklearn.feature_extraction.text import CountVectorizer
 import Credentials as cre
 import logging
@@ -254,42 +249,3 @@ class Movies():
 
         search_data_movies = search_data_movies.apply(
             lambda x: self.analyze_review(x, x["review_content"]), axis=1)
-
-
-# # twitter = Twitter()
-# # twitter_data = twitter.get_tweets("intel", 10)
-# # print(twitter_data)
-
-# ibm = IBM()
-# twitter = Twitter()
-# movies = Movies()
-# ibm.download_file()
-# # start = datetime.now()
-# # print("started timer")
-# # print(data_movies.isna().sum())
-# # finish = datetime.now()
-# # print(f"finished timer with time: {finish - start}")
-
-# text_input = "shawshank"
-# noOfTweet = 20
-
-# start = datetime.now()
-
-# search_data_movies = data_movies.loc[data_movies['movie_name'] == text_input]
-# if len(search_data_movies) == 0:
-#     search_data_movies = data_movies.loc[data_movies['movie_name'].str.contains(
-#         text_input)]
-# movies.adjust_reviews()
-
-# twitter.get_tweets(text_input, noOfTweet)
-# twitter.adjust_tweets()
-
-# FinalOutput = pd.concat([search_data_movies, search_data_twitter], axis=0)
-
-# finish = datetime.now()
-
-# FinalOutput.to_csv("data/out.csv")
-
-# print(f"finished timer with time: {finish - start}")
-# # print(search_data_movies)
-# # search_data_movies.to_csv("data/out.csv")
