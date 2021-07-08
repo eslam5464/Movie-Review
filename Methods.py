@@ -198,8 +198,6 @@ class Twitter():
 
         global search_data_twitter
         search_data_twitter = pd.DataFrame(tweet_list, columns=['tweets'])
-        # print("twitter data#$###333333333")
-        # print(search_data_twitter)
 
     def clean_tweet(self, text_to_clean: str):
         self.logger.debug(f"Cleaning tweet")
