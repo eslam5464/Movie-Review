@@ -13,6 +13,7 @@ import nltk
 import re
 import string
 from wordcloud import WordCloud, STOPWORDS
+from PIL import Image
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from sklearn.feature_extraction.text import CountVectorizer
 import Credentials as cre
@@ -51,7 +52,8 @@ class IBM:
         self.logger.debug(f"Initialize IBM class - [finished]")
 
     def download_file(self, fileName="FinalOutput01.csv"):
-        self.logger.debug(f"Downloading file")
+        self.logger.debug(f"Downloading file")        
+        global data_movies
 
         if not os.path.exists("data/FinalOutput01.csv"):
             def __iter__(self): return 0
@@ -61,7 +63,6 @@ class IBM:
             if not hasattr(body, "__iter__"):
                 body.__iter__ = types.MethodType(__iter__, body)
 
-            global data_movies
             data_movies = pd.read_csv(body, dtype={"movie_name": "string",
                                                    "genre": "string",
                                                    "review_content": "string",
@@ -74,12 +75,12 @@ class IBM:
             data_movies["movie_name"] = data_movies["movie_name"].str.lower()
             data_movies.to_csv("data/"+fileName)
 
+            self.logger.debug(f"Downloading file - [finished]")
+
         else:
             data_movies = pd.read_csv("data/"+fileName, index_col=0)
             data_movies["movie_name"] = data_movies["movie_name"].str.lower()
             self.logger.warning(f"The file exists when trying to download")
-
-        self.logger.debug(f"Downloading file - [finished]")
 
     def delete_item(self, object_name):
         self.logger.debug(f"Deleting file")
@@ -112,6 +113,43 @@ class Twitter():
         nltk.download('stopwords')
 
         self.logger.debug(f"Initialize Twitter class - [finished]")
+
+    def get_top_words(self, words="", ngram_range=(1, 1), n=5):
+        global search_data_twitter
+        words = search_data_twitter
+        vec = CountVectorizer(ngram_range=ngram_range,
+                              stop_words='english').fit(words["tweets"])
+        bag_of_words = vec.transform(words["tweets"])
+        sum_words = bag_of_words.sum(axis=0)
+        words_freq = [(word, sum_words[0, idx])
+                      for word, idx in vec.vocabulary_.items()]
+        words_freq = sorted(words_freq, key=lambda x: x[1], reverse=True)[:n]
+
+        out_word = []
+        out_freq = []
+        for word in words_freq:
+            out_word.append(word[0])
+            out_freq.append(word[1])
+        x = [out_word]
+        x.append(out_freq)
+        out = pd.DataFrame(x, index=["word", "count"])
+        return out.T
+
+    def set_word_count(self):
+        global search_data_twitter
+        self.logger.debug(f"Started Word count")
+        mask = np.array(Image.open("cloud.png"))
+        stopwords = set(STOPWORDS)
+        wc = WordCloud(background_color="white",
+                       mask=mask,
+                       max_words=3000,
+                       stopwords=stopwords,
+                       repeat=True)
+        wc.generate(str(search_data_twitter["tweets"]))
+        wc.to_file("wc.png")
+        img = Image.open(r"wc.png")
+        img.show()
+        self.logger.debug(f"Started Word count - [finished]")
 
     def analyze_tweet(self, dataFrame: pd.DataFrame(), text_to_analyze: str):
         self.logger.debug(f"Analyzing tweet")
@@ -160,6 +198,8 @@ class Twitter():
 
         global search_data_twitter
         search_data_twitter = pd.DataFrame(tweet_list, columns=['tweets'])
+        # print("twitter data#$###333333333")
+        # print(search_data_twitter)
 
     def clean_tweet(self, text_to_clean: str):
         self.logger.debug(f"Cleaning tweet")
