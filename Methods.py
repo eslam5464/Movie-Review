@@ -243,7 +243,6 @@ class Movies():
 
     def adjust_reviews(self):
         global search_data_movies
-        # print(search_data_movies)
         search_data_movies["review_content_cleaned"] = search_data_movies.apply(
             lambda x: self.clean_review(x["review_content"]), axis=1)
 
