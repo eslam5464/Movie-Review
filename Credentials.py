@@ -1,0 +1,7 @@
+ibm_api_key = ""
+ibm_service_crn = ""
+ibm_bucket_name = ""
+twitter_consumerKey = ""
+twitter_consumerSecret = ""
+twitter_accessToken = ""
+twitter_accessTokenSecret = ""
