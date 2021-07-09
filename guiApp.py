@@ -129,8 +129,7 @@ class MovieSearch(App):
         print(f"searched for {self.tb_movie.text.lower()}")
         start_processing(self)
 
-        url = dashboard_URL
-        webbrowser.open(url)
+        webbrowser.open(dashboard_URL)
 
 
 if __name__ == "__main__":
