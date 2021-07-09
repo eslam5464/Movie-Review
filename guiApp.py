@@ -11,8 +11,7 @@ import pandas as pd
 import numpy as np
 import os
 
-from sklearn.preprocessing import LabelEncoder
-
+dashboard_URL = r"PUT_URL_HERE"
 
 def init(self):
     self.methods = Methods
@@ -22,30 +21,34 @@ def init(self):
     self.movies = self.methods.Movies()
     self.ibm.download_file()
     self.text_input = ""
-    self.noOfTweet = 10
+    self.noOfTweet = 10 # you can change the number of the desired tweets you want to put in the dashboard
 
 
 def start_processing(self):
     self.methods.search_data_movies = self.methods.data_movies.loc[
-        self.methods.data_movies['movie_name'] == self.text_input]
+        self.methods.data_movies['movie_name'] == self.text_input]# checks for the searched text in the data frame with the literal word
 
-    if len(self.methods.search_data_movies) == 0:
+    if len(self.methods.search_data_movies) == 0: # checks for the searched text in the data frame
         self.methods.search_data_movies = self.methods.data_movies.loc[self.methods.data_movies['movie_name'].str.contains(
             self.text_input)]
 
-    if len(self.methods.search_data_movies) == 0:
+    if len(self.methods.search_data_movies) == 0: # if the two methods of searching didnt work out the program will stop searching
         self.lb_searched_text.text = f"No results were found for {self.lb_searched_text.text}, please refince your search words"
 
     else:
-        self.movies.adjust_reviews()
+        # clean & analyze data frame of the reviews for the searched movie name
+        self.movies.adjust_reviews() 
         self.methods.search_data_movies = self.methods.search_data_movies.reset_index()
-
+           
+        # clean & analyze the tweets you searched for
         self.twitter.get_tweets(self.text_input, self.noOfTweet)
-        self.twitter.adjust_tweets()
+        self.twitter.adjust_tweets() 
         self.methods.search_data_twitter = self.methods.search_data_twitter.reset_index()
 
-        self.words = self.twitter.get_top_words().reset_index()
-
+        # gets the most common words in the tweets
+        self.words = self.twitter.get_top_words().reset_index() 
+        
+        # concatenating all of the above dataframes to -> FinalOutput
         self.FinalOutput = pd.concat(
             [self.methods.search_data_movies, self.methods.search_data_twitter, self.words], axis=1)
 
@@ -64,8 +67,10 @@ def start_processing(self):
         self.FinalOutput.to_csv('data/DashboardInput.csv',
                                 index=False, header=True)
 
+        # delete the file if it exists in IBM cloud
         self.ibm.delete_item('DashboardInput.csv')
-
+        
+        # upload the new file to IBM cloud
         self.ibm.upload_file()
 
         self.lb_searched_text.text = f"Searched for '{self.tb_movie.text}'"
@@ -124,7 +129,7 @@ class MovieSearch(App):
         print(f"searched for {self.tb_movie.text.lower()}")
         start_processing(self)
 
-        url = r"https://eu-gb.dataplatform.cloud.ibm.com/dashboards/e8d08e6c-a884-46c4-bf21-f92c778f624d/view/5f09d679279c23d014cecce407992d0278332459e1bb8757d38c7b490f607597a8604099c87d4f5ad2155431f2ee400b9a"
+        url = dashboard_URL
         webbrowser.open(url)
 
 
