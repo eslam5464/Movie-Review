@@ -102,6 +102,7 @@ class IBM:
 
 class Twitter():
     def __init__(self):
+        # starting the logging for debugging purposes
         logging.basicConfig(filename="data/guiApp.log",
                             format='%(asctime)s -- %(name)s -- %(levelname)s -- %(funcName)s -- %(message)s',
                             filemode='a', datefmt='%Y/%m/%d %H:%M:%S')
@@ -114,7 +115,7 @@ class Twitter():
 
         self.logger.debug(f"Initialize Twitter class - [finished]")
 
-    def get_top_words(self, words="", ngram_range=(1, 1), n=5):
+    def get_top_words(self, words="", ngram_range=(1, 1), n=5): # methods to get the most common 5 words in the desired dataframe
         global search_data_twitter
         words = search_data_twitter
         vec = CountVectorizer(ngram_range=ngram_range,
@@ -135,7 +136,7 @@ class Twitter():
         out = pd.DataFrame(x, index=["word", "count"])
         return out.T
 
-    def set_word_count(self):
+    def set_word_count(self): # makes a cloud with the most used words to the least in a cloud picture
         global search_data_twitter
         self.logger.debug(f"Started Word count")
         mask = np.array(Image.open("cloud.png"))
@@ -153,12 +154,15 @@ class Twitter():
 
     def analyze_tweet(self, dataFrame: pd.DataFrame(), text_to_analyze: str):
         self.logger.debug(f"Analyzing tweet")
+        
+        # using NLTK, start analyzing the desired scentence
         score = SentimentIntensityAnalyzer().polarity_scores(text_to_analyze)
         neg = score['neg']
         neu = score['neu']
         pos = score['pos']
         comp = score['compound']
-
+        
+        # for each if condition checks if the scentence is leaning to which side
         if neg > pos:
             dataFrame["tweet_sent_negative"] = 1
             dataFrame["tweet_sent_postive"] = 0
@@ -179,6 +183,8 @@ class Twitter():
 
     def get_tweets(self, keyword: str, noOfTweet: int):
         self.logger.debug(f"Getting tweet with keyword: {keyword}")
+        
+        # get the keys from the "Credentials.py" file associated beside this file
         consumerKey = cre.twitter_consumerKey
         consumerSecret = cre.twitter_consumerSecret
         accessToken = cre.twitter_accessToken
@@ -188,6 +194,8 @@ class Twitter():
         auth.set_access_token(accessToken, accessTokenSecret)
         api = tweepy.API(auth)
 
+        # using tweepy, getting the tweets for the desired search word with the variable
+        # "noOfTweet" to be the desired number of tweets you want
         tweets = tweepy.Cursor(api.search, q=keyword).items(noOfTweet)
         tweet_list = []
         for tweet in tweets:
@@ -195,19 +203,27 @@ class Twitter():
 
         self.logger.debug(
             f"Getting tweet with keyword: {keyword} - [finished]")
-
+        
+        # returning the searched tweets to the global dataframe to acess it easier
         global search_data_twitter
         search_data_twitter = pd.DataFrame(tweet_list, columns=['tweets'])
 
     def clean_tweet(self, text_to_clean: str):
         self.logger.debug(f"Cleaning tweet")
+        
+        # collecting stopwords from NLTK library
         stopword = nltk.corpus.stopwords.words('english')
-        ps = nltk.PorterStemmer()
+        
+        # removing punctuation
         text_lc = "".join([word.lower()
                            for word in text_to_clean if word not in string.punctuation])
         text_rc = re.sub('[0-9]+', '', text_lc)
+        
+        # applying tokenization
         tokens = re.split('\W+', text_rc)
 
+        # applying stemmer for all the words while not being in the stopwords
+        ps = nltk.PorterStemmer()
         text_to_clean = [ps.stem(word)
                          for word in tokens if word not in stopword]
 
@@ -229,6 +245,7 @@ class Twitter():
 
 class Movies():
     def __init__(self):
+        # starting the logging for debugging purposes
         logging.basicConfig(filename="data/guiApp.log",
                             format='%(asctime)s -- %(name)s -- %(levelname)s -- %(funcName)s -- %(message)s',
                             filemode='a', datefmt='%Y/%m/%d %H:%M:%S')
@@ -240,12 +257,15 @@ class Movies():
 
     def analyze_review(self, dataFrame: pd.DataFrame(), text_to_analyze: str):
         self.logger.debug(f"Analyzing review")
+        
+        # using NLTK, start analyzing the desired scentence
         score = SentimentIntensityAnalyzer().polarity_scores(text_to_analyze)
         neg = score['neg']
         neu = score['neu']
         pos = score['pos']
         comp = score['compound']
-
+        
+        # for each if condition checks if the scentence is leaning to which side
         if neg > pos:
             dataFrame["review_sent_negative"] = 1
             dataFrame["review_sent_postive"] = 0
@@ -266,20 +286,29 @@ class Movies():
 
     def clean_review(self, text_to_clean: str):
         self.logger.debug(f"Cleaning review")
+        
+        # collecting stopwords from NLTK library
         stopword = nltk.corpus.stopwords.words('english')
-        ps = nltk.PorterStemmer()
+        
+        # removing punctuation
         text_lc = "".join([word.lower()
                            for word in text_to_clean if word not in string.punctuation])
         text_rc = re.sub('[0-9]+', '', text_lc)
+        
+        # applying tokenization
         tokens = re.split('\W+', text_rc)
-
+        
+        # applying stemmer for all the words while not being in the stopwords
+        ps = nltk.PorterStemmer()
         text_to_clean = [ps.stem(word)
                          for word in tokens if word not in stopword]
 
         self.logger.debug(f"Cleaning review - [finished]")
+        
+        # returning the text with spaces because of cleaning turned it into list or words
         return " ".join(text_to_clean)
 
-    def adjust_reviews(self):
+    def adjust_reviews(self): # combing the two methids (clean_review & analyze_review) together
         global search_data_movies
         search_data_movies["review_content_cleaned"] = search_data_movies.apply(
             lambda x: self.clean_review(x["review_content"]), axis=1)
