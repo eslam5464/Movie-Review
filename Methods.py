@@ -27,13 +27,15 @@ search_data_movies = pd.DataFrame()
 
 class IBM:
     def __init__(self):
+        # starting the logging for debugging purposes
         logging.basicConfig(filename="data/guiApp.log",
                             format='%(asctime)s -- %(name)s -- %(levelname)s -- %(funcName)s -- %(message)s',
                             filemode='a', datefmt='%Y/%m/%d %H:%M:%S')
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
         self.logger.debug(f"Initialize IBM class")
-
+        
+        # setting the credentials if IBM and other important variables to connect with IBM
         self.COS_ENDPOINT = "https://s3.eu.cloud-object-storage.appdomain.cloud"
         self.COS_API_KEY_ID = cre.ibm_api_key
         self.COS_AUTH_ENDPOINT = "https://iam.cloud.ibm.com/identity/token"
@@ -51,18 +53,21 @@ class IBM:
 
         self.logger.debug(f"Initialize IBM class - [finished]")
 
-    def download_file(self, fileName="FinalOutput01.csv"):
+    def download_file(self, fileName="FinalOutput01.csv"): # method to download the file from IBM cloud
         self.logger.debug(f"Downloading file")        
         global data_movies
-
+        
+        # check if the file exists in the location of the program
         if not os.path.exists("data/FinalOutput01.csv"):
             def __iter__(self): return 0
-
+            
+            # getting the body of the file from IBM cloud
             body = self.cos.get_object(
                 Bucket='dataguru01-donotdelete-pr-9rmz8gbtdfizh7', Key=fileName)['Body']
             if not hasattr(body, "__iter__"):
                 body.__iter__ = types.MethodType(__iter__, body)
-
+            
+            # read it as csv with the body from IBM API
             data_movies = pd.read_csv(body, dtype={"movie_name": "string",
                                                    "genre": "string",
                                                    "review_content": "string",
@@ -71,18 +76,20 @@ class IBM:
                                                    "critic_country": "string",
 
                                                    }, parse_dates=['release_date', 'review_date'], low_memory=False, index_col=0)
-
+            
+            # saving the downloaded data frame onto the disk
             data_movies["movie_name"] = data_movies["movie_name"].str.lower()
             data_movies.to_csv("data/"+fileName)
 
             self.logger.debug(f"Downloading file - [finished]")
-
+            
+        # if the file already exists, just read it and dont download
         else:
             data_movies = pd.read_csv("data/"+fileName, index_col=0)
             data_movies["movie_name"] = data_movies["movie_name"].str.lower()
             self.logger.warning(f"The file exists when trying to download")
 
-    def delete_item(self, object_name):
+    def delete_item(self, object_name): # method to delete a file in IBM cloud
         self.logger.debug(f"Deleting file")
         try:
             self.cos.delete_object(Bucket=self.bucket_name, Key=object_name)
@@ -94,9 +101,10 @@ class IBM:
         self.logger.debug(f"Deleting file - [finished]")
 
     def upload_file(self, fileName='data/DashboardInput.csv', key='DashboardInput.csv', bucket='dataguru01-donotdelete-pr-9rmz8gbtdfizh7'):
+        # method to upload a file to IBM cloud
         self.logger.debug(f"Uploading file")
         self.cos.upload_file(Filename=fileName, Bucket=bucket, Key=key)
-        # os.remove(fileName)  # comment if needed
+        # os.remove(fileName)  # comment if you need to see the file after it was uploaded
         self.logger.debug(f"Uploading file - [finished]")
 
 
@@ -230,7 +238,7 @@ class Twitter():
         self.logger.debug(f"Cleaning tweet - [finished]")
         return " ".join(text_to_clean)
 
-    def adjust_tweets(self):
+    def adjust_tweets(self): # combing the two methids (clean_tweet & analyze_tweet) together
         self.logger.debug(f"Adjusting tweets")
         global search_data_twitter
 
